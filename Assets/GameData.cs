@@ -2,14 +2,10 @@
 using System.Collections;
 using System.Collections.Generic;
 
-public class GameData : MonoBehaviour {
+public static class GameData {
 
-	public List<Incident> incidentRecords = new List<Incident>();
-
-	// Use this for initialization
-	void Start () {
-	
-		incidentRecords.Add(new Incident() {
+	public static List<Incident> incidentRecords = new List<Incident>() {
+		new Incident() {
 			prompt = "{PC1} fucked up the coolant for the {SE0} and now it's overeating. It will melt through the hull unless we vent the engineering bay. {PC1} is currently in the engineering bay.",
 			controls = new List<Control> () {
 				new Control () { relativeCharacterId = "PC0", buttonText = "Vent engineering and lose {PC1}.", outcomes = new List<Outcome> { new Outcome(OutcomeCommand.Destroy, "PC1") }, 
@@ -28,6 +24,6 @@ public class GameData : MonoBehaviour {
 				new Belief () { relativeCharacterId = "PC4", text = "{PC1} means well and he would save any one of us if the tables were turned." },
 				new Belief () { relativeCharacterId = "PC5", text = "You sabotaged the {SE0} but no one must know. If {PC1} lives, he may be able to discovery your treachery." },
 			}
-		});
-	}
+		}
+	};
 }
