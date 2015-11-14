@@ -6,7 +6,8 @@ public static class GameData {
 
 	public static List<Incident> incidentRecords = new List<Incident>() {
 		new Incident() {
-			prompt = "{PC1} fucked up the coolant for the {SE0} and now it's overeating. It will melt through the hull unless we vent the engineering bay. {PC1} is currently in the engineering bay.",
+			prompt = "{PC1} fucked up the coolant for the {SE0} and now it's overeating. It will melt through the hull unless we vent the engineering bay. {PC1} is currently in the " +
+				"engineering bay. {PC0} stands ready at the door control.",
 			controls = new List<Control> () {
 				new Control () { relativeCharacterId = "PC0", buttonText = "Vent engineering and lose {PC1}.", outcomes = new List<Outcome> { new Outcome(OutcomeCommand.Destroy, "PC1") }, 
 					conclusionText = "{PC1} is blown out into the vacuum of space, but with some work, the {SE0} will be fully operational again." },

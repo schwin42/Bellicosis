@@ -13,6 +13,10 @@ public class Incident
 	public List<Control> controls;
 }
 
+public class InstantiatedIncident : Incident {
+
+}
+
 public class Belief
 {
 	public string relativeCharacterId;
@@ -39,6 +43,11 @@ public class Outcome {
 
 public class Character {
 	public string name;
+}
+
+public class Player {
+	public Character playerCharacter;
+
 }
 
 public enum OutcomeCommand {
