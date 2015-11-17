@@ -33,6 +33,9 @@ public class GameController : MonoBehaviour {
 	//Game Instance
 	public int nextThingId = 0;
 
+	//Encounter Instance
+	private int selectedChoiceIndex = -1;
+
 	//UI Elements
 	Transform screenContainer;
 	Text _console;
@@ -83,10 +86,11 @@ public class GameController : MonoBehaviour {
 			break;
 		case ScreenState.Incident_InProgress:
 			_incidentInProgress_Body.text = currentIncident.GetPlayerInfoText(myCharacterThingId);
-			foreach(string s in currentIncident.GetPlayerControlsText(myCharacterThingId)) {
+			List<string> buttonStrings = currentIncident.GetPlayerControlsText(myCharacterThingId).ToList();
+			for(int i = 0; i < buttonStrings.Count; i++) {
 				GameObject buttonGo = Instantiate<GameObject>(_incidentInProgress_ButtonTemplate) as GameObject;
 				buttonGo.SetActive(true);
-				buttonGo.GetComponentInChildren<Text>().text = s;
+				buttonGo.GetComponent<ButtonHandler>().InitializeButton(this, i, buttonStrings[i]);
 				buttonGo.transform.parent = _incidentInProgress_ButtonGrid;
 				buttonGo.transform.localScale = Vector3.one;
 			}
@@ -94,7 +98,7 @@ public class GameController : MonoBehaviour {
 //			_incidentInProgress_Body.text = currentIncident.beliefs[0].text;
 			break;
 		case ScreenState.Incident_Conclusion:
-			_incidentConclusion_Resolution.text = currentIncident.controls[0].conclusionText;
+//			_incidentConclusion_Resolution.text = currentIncident.GetConclusionText(myCharacterThingId, selectedChoiceIndex);
 			break;
 
 		}
@@ -139,7 +143,8 @@ public class GameController : MonoBehaviour {
 	}
 
 	public void ButtonHandler_IncidentInProgress_Control (int index) {
-		List<Outcome> outcomes = currentIncident.controls[index].outcomes; //TODO do something with the outcomes
+		selectedChoiceIndex = index;
+		List<Consequence> outcomes = currentIncident.controls[index].outcomes; //TODO do something with the outcomes
 		SetScreen(ScreenState.Incident_Conclusion);
 	}
 

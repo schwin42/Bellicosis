@@ -23,6 +23,7 @@ public class Incident
 	public string abstractPrompt;
 	public List<Belief> beliefs;
 	public List<Control> controls;
+	public List<Consequence> consequences;
 
 	public InstantiatedIncident Instantiate (List<Character> charactersById, List<ShipEquipment> shipEquipmentById)
 	{
@@ -117,17 +118,20 @@ public class Control
 {
 	public int internalCharacterId;
 	public string buttonText;
-	public List<Outcome> outcomes;
-	public string conclusionText;
+	public int consequenceId;
 }
 
-public class Outcome
+public class Consequence
 {
-	public OutcomeCommand command = OutcomeCommand.Uninitialized;
+	public int internalId;
+	public string abstractText;
+	public ConsequenceCommand command = ConsequenceCommand.Uninitialized;
 	public string target;
 
-	public Outcome (OutcomeCommand command, string target)
+	public Consequence (int internalId, string abstractText, ConsequenceCommand command, string target)
 	{
+		this.internalId = internalId;
+		this.abstractText = abstractText;
 		this.command = command;
 		this.target = target;
 	}
@@ -158,7 +162,7 @@ public class Player
 
 }
 
-public enum OutcomeCommand
+public enum ConsequenceCommand
 {
 	Uninitialized,
 	Destroy,
