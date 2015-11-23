@@ -2,10 +2,11 @@
 using System.Collections;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using System.Collections.Generic;
 
 public class ButtonHandler : MonoBehaviour, IPointerClickHandler {
 
-	public int choiceIndex;
+	public List<int> choiceIds;
 
 	private GameController gameController;
 
@@ -13,14 +14,14 @@ public class ButtonHandler : MonoBehaviour, IPointerClickHandler {
 
 	public void OnPointerClick (PointerEventData eventData)
 	{
-		gameController.ButtonHandler_IncidentInProgress_Control(choiceIndex);
+		gameController.ButtonHandler_IncidentInProgress_Control(choiceIds);
 	}
 
 	#endregion
 
-	public void InitializeButton(GameController gameController, int choiceId, string text) {
+	public void InitializeButton(GameController gameController, List<int> choiceIds, string text) {
 		this.gameController = gameController;
-		this.choiceIndex = choiceId;
+		this.choiceIds = choiceIds;
 		GetComponentInChildren<Text>().text = text;
 	}
 }

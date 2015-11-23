@@ -28,13 +28,13 @@ public class GameController : MonoBehaviour {
 	private ScreenState _currentState = ScreenState.Uninitialized;
 	private Dictionary<ScreenState, GameObject> stateGoReference;
 
-	private InstantiatedIncident currentIncident = null;
+	//Encounter Instance
+	private RealizedEncounter currentIncident = null;
+	private List<EncounterOutcome> currentOutcomes = null;
 
 	//Game Instance
-	public int nextThingId = 0;
-
-	//Encounter Instance
-	private int selectedChoiceIndex = -1;
+	public Ship activeShip = null;
+	private List<IThing> thingsById = new List<IThing> ();
 
 	//UI Elements
 	Transform screenContainer;
@@ -49,11 +49,17 @@ public class GameController : MonoBehaviour {
 	void Start () {
 	
 		//Temp
-		currentIncident = GameData.incidentRecords[0].Instantiate(joinedPlayers.Select(p => p.playerCharacter).ToList(), new List<ShipEquipment> { new ShipEquipment { name = "samoflange generator"} });
+		ShipEquipment testEquipment = new ShipEquipment() { name = "samoflange generator" };
+
+		currentIncident = GameData.incidentRecords[0].Realize(joinedPlayers.Select(p => p.playerCharacter).ToList(), new List<ShipEquipment> { testEquipment });
 		foreach(Player player in joinedPlayers) {
-			player.playerCharacter.Register(nextThingId);
-			nextThingId++;
+			RegisterThing(player.playerCharacter);
 		}
+		activeShip = new Ship ();
+		activeShip.activeThings = new List<int> ();
+		activeShip.activeThings.AddRange(joinedPlayers.Select(player => player.playerCharacter.ThingId));
+		RegisterThing(testEquipment);
+		activeShip.activeThings.Add(testEquipment.ThingId);
 
 		InitializeUi();
 
@@ -86,11 +92,13 @@ public class GameController : MonoBehaviour {
 			break;
 		case ScreenState.Incident_InProgress:
 			_incidentInProgress_Body.text = currentIncident.GetPlayerInfoText(myCharacterThingId);
-			List<string> buttonStrings = currentIncident.GetPlayerControlsText(myCharacterThingId).ToList();
-			for(int i = 0; i < buttonStrings.Count; i++) {
+			List<Control> abstractControls = currentIncident.abstractControls;
+
+//			List<string> buttonStrings = currentIncident.GetPlayerControlsText(myCharacterThingId).ToList();
+			foreach(Control control in abstractControls) {
 				GameObject buttonGo = Instantiate<GameObject>(_incidentInProgress_ButtonTemplate) as GameObject;
 				buttonGo.SetActive(true);
-				buttonGo.GetComponent<ButtonHandler>().InitializeButton(this, i, buttonStrings[i]);
+				buttonGo.GetComponent<ButtonHandler>().InitializeButton(this, control.consequenceIds, currentIncident.RealizeText(control.buttonText));
 				buttonGo.transform.parent = _incidentInProgress_ButtonGrid;
 				buttonGo.transform.localScale = Vector3.one;
 			}
@@ -98,7 +106,14 @@ public class GameController : MonoBehaviour {
 //			_incidentInProgress_Body.text = currentIncident.beliefs[0].text;
 			break;
 		case ScreenState.Incident_Conclusion:
-//			_incidentConclusion_Resolution.text = currentIncident.GetConclusionText(myCharacterThingId, selectedChoiceIndex);
+			string displayText = "";
+			for(int i = 0; i < currentOutcomes.Count; i++) {
+				displayText += currentIncident.RealizeText(currentOutcomes[i].abstractText);
+				if(i != currentOutcomes.Count - 1) {
+					displayText += "\n";
+				}
+			}
+			_incidentConclusion_Resolution.text = displayText;
 			break;
 
 		}
@@ -142,12 +157,60 @@ public class GameController : MonoBehaviour {
 		SetScreen(ScreenState.Incident_InProgress);
 	}
 
-	public void ButtonHandler_IncidentInProgress_Control (int index) {
-		selectedChoiceIndex = index;
-		List<Consequence> outcomes = currentIncident.controls[index].outcomes; //TODO do something with the outcomes
+	public void ButtonHandler_IncidentInProgress_Control (List<int> chosenConsequenceIds) {
+		currentOutcomes = new List<EncounterOutcome> ();
+		foreach(int id in chosenConsequenceIds) {
+			Debug.Log ("id: " + id);
+			Debug.Log ("con ids count: " + chosenConsequenceIds.Count);
+			Debug.Log("oucomes: " + currentIncident.outcomes.Count);
+			currentOutcomes.Add(currentIncident.outcomes[id]);
+		}
+		foreach(EncounterOutcome outcome in currentOutcomes) {
+			for(int i = 0; i < outcome.commands.Count; i++) {
+				bool commandExecuted = false;
+				switch(outcome.commands[i]) {
+				case ConsequenceCommand.Destroy:
+					Debug.Log ("Destroying " + currentIncident.GetThingIdFromInternalString(outcome.targetIds[i]));
+					DestroyThing(currentIncident.GetThingIdFromInternalString(outcome.targetIds[i]));
+					commandExecuted = true;
+					break;
+				default:
+					WriteToConsole("Unexpected command: " + outcome.commands[i]);
+					break;
+				}
+				if(commandExecuted) {
+					break;
+				}
+				if(i == outcome.commands.Count - 1) {
+					WriteToConsole("Unhandled command: " + outcome.commands[i]);
+				}
+			}
+		}
 		SetScreen(ScreenState.Incident_Conclusion);
 	}
 
+	#endregion
+
+	#region game logic
+	
+	public void RegisterThing(IThing thing) {
+		thing.ThingId = thingsById.Count;
+		thingsById.Add(thing);
+	}
+
+	public void DestroyThing(int id) {
+		if(id == -1) {
+			WriteToConsole("Invalid id in DestroyThing: -1");
+			return;
+		}
+		for(int i = 0; i < activeShip.activeThings.Count; i++) {
+			if(activeShip.activeThings[i] == id) {
+				activeShip.deadThings.Add(activeShip.activeThings[i]);
+				activeShip.activeThings.RemoveAt(i);
+			}
+		}
+	}
+	
 	#endregion
 
 	#region debug
@@ -156,6 +219,5 @@ public class GameController : MonoBehaviour {
 		print (s);
 		_console.text = s + "\n" + _console.text;
 	}
-
 	#endregion
 }
